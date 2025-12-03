@@ -3,21 +3,13 @@ import { inputToArrayLines } from "../../utils/inputToArray.ts";
 const findNextDigit = (
   batteryBank: string,
   lastIndex: number,
-  startIndex?: number
+  startIndex: number
 ) => {
   let foundDigit;
   let position;
   for (let searchInt = 9; searchInt >= 0; searchInt--) {
-    position =
-      startIndex !== undefined
-        ? batteryBank.lastIndexOf(searchInt.toString())
-        : batteryBank.indexOf(searchInt.toString());
-    if (
-      position !== -1 &&
-      (startIndex !== undefined
-        ? position > startIndex
-        : position !== lastIndex)
-    ) {
+    position = batteryBank.indexOf(searchInt.toString(), startIndex);
+    if (position !== -1 && position >= startIndex && position < lastIndex) {
       foundDigit = searchInt;
       break;
     }
@@ -34,7 +26,7 @@ const first = (input: string) => {
   for (const batteryBank of data) {
     const lastIndex = batteryBank.length - 1;
 
-    const firstDigit = findNextDigit(batteryBank, lastIndex);
+    const firstDigit = findNextDigit(batteryBank, lastIndex, 0);
     if (
       firstDigit.foundDigit === undefined ||
       firstDigit.position === undefined
@@ -44,8 +36,8 @@ const first = (input: string) => {
 
     const secondDigit = findNextDigit(
       batteryBank,
-      lastIndex,
-      firstDigit.position
+      lastIndex + 1,
+      firstDigit.position + 1
     );
     const joltage = Number(`${firstDigit.foundDigit}${secondDigit.foundDigit}`);
     sum = sum + joltage;
@@ -57,34 +49,37 @@ const expectedFirstSolution = "17196";
 
 const second = (input: string) => {
   const data = inputToArrayLines(input);
-  let sum = 0;
-  for (const batteryBank of data) {
-    const lastIndex = batteryBank.length - 1;
-    let joltage = "";
-    let startPosition;
 
-    for (let i = 1; i <= 12; i++) {
+  const joltageLength = 12;
+
+  let sum = 0;
+
+  for (const batteryBank of data) {
+    let lastIndex = batteryBank.length - joltageLength + 1;
+    let joltage = "";
+    let startPosition = 0;
+
+    for (let i = 1; i <= joltageLength; i++) {
+      // adjust last index so that there's always room for the rest
       const nextDigit = findNextDigit(batteryBank, lastIndex, startPosition);
+
       if (
         nextDigit.foundDigit === undefined ||
         nextDigit.position === undefined
       ) {
-        console.log(
-          "** error in search **",
-          batteryBank,
-          i,
-          nextDigit.foundDigit
-        );
+        console.log("** error in search **");
         break;
       }
-      startPosition = nextDigit.position;
+
       joltage = `${joltage}${nextDigit.foundDigit}`;
+      startPosition = nextDigit.position + 1;
+      lastIndex++;
     }
     sum = sum + Number(joltage);
   }
   return sum;
 };
 
-const expectedSecondSolution = "solution 2";
+const expectedSecondSolution = "171039099596062";
 
 export { expectedFirstSolution, expectedSecondSolution, first, second };

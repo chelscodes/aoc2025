@@ -5,9 +5,9 @@
 
 import { inputToArrayLines } from "../../utils/inputToArray.ts";
 
-const first = (input: string) => {
-  const data = inputToArrayLines(input)
+const searchData = (data: string[]) => {
   let totalAccessibleRolls = 0
+  const newDataSet = structuredClone(data)
 
   for (let row = 0; row < data.length; row++) {
     const currentRow = data[row]
@@ -44,21 +44,43 @@ const first = (input: string) => {
       
       if (adjacentRollCount < 4) {
         totalAccessibleRolls++
+        // remove from the new data set
+        const leftSide = space > 0 ? newDataSet[row].substring(0, space) : ""
+        const rightSide = space < currentRow.length - 1 ? newDataSet[row].substring(space + 1, currentRow.length) : ""
+        newDataSet[row] = `${leftSide}.${rightSide}`
       }
 
     }
   }
-  
-  return totalAccessibleRolls;
+
+  return {totalAccessibleRolls, newDataSet}
+}
+
+const first = (input: string) => {
+  const data = inputToArrayLines(input)
+  const totalRolls = searchData(data).totalAccessibleRolls
+
+  return totalRolls
 };
 
 const expectedFirstSolution = 1372;
 
 const second = (input: string) => {
-  // console.log(input);
-  return 'solution 2';
+  const data = inputToArrayLines(input)
+
+  let totalRolls = 0
+  let lastResult
+
+  let latestData = data
+  while (lastResult !== 0) {
+    const { totalAccessibleRolls, newDataSet } = searchData(latestData)
+    lastResult = totalAccessibleRolls
+    totalRolls = totalRolls + lastResult
+    latestData = newDataSet
+  }
+  return totalRolls;
 };
 
-const expectedSecondSolution = 'solution 2';
+const expectedSecondSolution = 7922;
 
 export { expectedFirstSolution, expectedSecondSolution, first, second };

@@ -3,6 +3,7 @@ const first = (input: string) => {
   return 'solution 1';
 };
 
+// example answer =
 const expectedFirstSolution = 'solution 1';
 
 const second = (input: string) => {
@@ -10,6 +11,7 @@ const second = (input: string) => {
   return 'solution 2';
 };
 
+// example answer =
 const expectedSecondSolution = 'solution 2';
 
 export { expectedFirstSolution, expectedSecondSolution, first, second };

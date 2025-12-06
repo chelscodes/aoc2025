@@ -33,6 +33,7 @@ const first = (input: string) => {
   return sum;
 };
 
+// example answer: 1227775554
 const expectedFirstSolution = "23701357374";
 
 // look at first half, digit by digit
@@ -125,6 +126,8 @@ const second = (input: string) => {
   const sum = invalidNumbers.reduce((acc, currentValue) => acc + currentValue);
   return sum;
 };
+
+// example answer: 4174379265
 const expectedSecondSolution = "34284458938";
 
 export { expectedFirstSolution, expectedSecondSolution, first, second };

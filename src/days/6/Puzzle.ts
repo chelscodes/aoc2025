@@ -44,6 +44,7 @@ const first = (input: string) => {
   return overallTotal;
 };
 
+// example answer = 4277556
 const expectedFirstSolution = 6295830249262;
 
 
@@ -113,6 +114,7 @@ const second = (input: string) => {
   return overallTotal;
 };
 
+// example answer = 3263827
 const expectedSecondSolution = 'solution 2';
 
 export { expectedFirstSolution, expectedSecondSolution, first, second };

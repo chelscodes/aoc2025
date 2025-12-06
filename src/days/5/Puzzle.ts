@@ -34,6 +34,7 @@ const first = (input: string) => {
   return totalFresh;
 };
 
+// example answer = 3
 const expectedFirstSolution = 798;
 
 const mergeRanges = (ranges: number[][]) => {
@@ -148,6 +149,7 @@ const second = (input: string) => {
   return freshIdCount;
 };
 
+// example answer = 14
 const expectedSecondSolution = 366181852921027;
 
 export { expectedFirstSolution, expectedSecondSolution, first, second };

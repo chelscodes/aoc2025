@@ -63,6 +63,7 @@ const first = (input: string) => {
   return totalRolls
 };
 
+// example answer = 13
 const expectedFirstSolution = 1372;
 
 const second = (input: string) => {
@@ -81,6 +82,7 @@ const second = (input: string) => {
   return totalRolls;
 };
 
+// example answer = 43
 const expectedSecondSolution = 7922;
 
 export { expectedFirstSolution, expectedSecondSolution, first, second };

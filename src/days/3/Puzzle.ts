@@ -45,6 +45,7 @@ const first = (input: string) => {
   return sum;
 };
 
+// example answer: 357
 const expectedFirstSolution = "17196";
 
 const second = (input: string) => {
@@ -80,6 +81,7 @@ const second = (input: string) => {
   return sum;
 };
 
+// example answer = 3121910778619
 const expectedSecondSolution = "171039099596062";
 
 export { expectedFirstSolution, expectedSecondSolution, first, second };

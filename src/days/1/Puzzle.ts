@@ -60,6 +60,7 @@ const first = (input: string) => {
 
   return zeroCount;
 };
+// example answer: 3
 const expectedFirstSolution = "1023";
 
 const getDistanceAmounts = (distance: number) => {
@@ -117,6 +118,7 @@ const second = (input: string) => {
   return landsZero + spinsPastZero + adjustedPastZero;
 };
 
+// example answer: 6
 const expectedSecondSolution = "5899";
 
 export { expectedFirstSolution, expectedSecondSolution, first, second };

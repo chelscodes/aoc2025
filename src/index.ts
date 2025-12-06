@@ -3,6 +3,7 @@ import readFile from './utils/readFile.ts';
 
 const args = process.argv.slice(2);
 const dayToSolve = args[0];
+const test = args[1]
 
 if (!dayToSolve) {
   console.error('No day specified run with npm run dev {day}');
@@ -14,7 +15,11 @@ let input = '';
 const puzzleName = args[0];
 try {
   const puzzlePath = `src/days/${puzzleName}`;
-  input = await readFile(`${puzzlePath}/input.txt`);
+  if (test) {
+    input = await readFile(`${puzzlePath}/example-test-1.txt`);
+  } else {
+    input = await readFile(`${puzzlePath}/input.txt`);
+  }
 } catch (error) {
   console.error(error);
   process.exit(1);

@@ -49,19 +49,21 @@ const expectedFirstSolution = 6295830249262;
 
 
 const second = (input: string) => {
-  // console.log(input);
-
   const data = inputToArrayLines(input)
-  // console.log(data);
 
-  const spaceString = data[data.length - 1].trim().split(/[*|+]/)[1]
-  const spaceNumber = spaceString.length
-  const lineLength = data[0].length
+  const operationsString = data.pop()
+  if (operationsString === undefined) return "error in operations"
+  const operations = operationsString?.trim().split(/[ ]+/)
 
-  const operations = data.pop()?.trim().split(/[ ]+/)
-  if (operations === undefined) return "error in operations"
+  const numberOfColumns = operations.length
+  const columnsWidths = operationsString.split(/[*|+]/) // skip first, add 1 to last
 
-  const mathLines = data.map((line) => {
+  let overallTotal = 0
+
+  // iterate through each column
+  const mathLines = data.map((line, i) => {
+    const lineLength = line.length
+    const spaceNumber = columnsWidths[i + 1].length
     const newLine = []
     let startIndex = 0
     let endIndex = spaceNumber
@@ -69,18 +71,17 @@ const second = (input: string) => {
       newLine.push(line.slice(startIndex, endIndex))
       startIndex = endIndex + 1
       endIndex = endIndex + spaceNumber + 1
+      if (endIndex === lineLength - 1) {
+        endIndex++
+      }
     }
     return newLine
   })
 
-  const columnsLength = operations.length
+  console.log({mathLines})
 
-  console.log({spaceString, spaceNumber, operations, mathLines})
+  for (let i = 0; i < numberOfColumns; i++) {
 
-  let overallTotal = 0
-
-  // iterate through each column
-  for (let i = 0; i < columnsLength; i++) {
     const operator = operations[i]
 
     const newValues: string[] = []
@@ -107,7 +108,6 @@ const second = (input: string) => {
         runningTotal += currentNumber
       }
     }
-    console.log(runningTotal)
     overallTotal = overallTotal + runningTotal
   }
 

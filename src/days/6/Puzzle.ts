@@ -53,24 +53,45 @@ const second = (input: string) => {
 
   const operationsString = data.pop()
   if (operationsString === undefined) return "error in operations"
-  const operations = operationsString?.trim().split(/[ ]+/)
-
+  const operations = operationsString?.trim().split(/[ ]+/) // only operation signs
   const numberOfColumns = operations.length
-  const columnsWidths = operationsString.split(/[*|+]/) // skip first, add 1 to last
+
+  const columnsWidths = operationsString.split(/[*|+]/) // string of spaces, skip first (blank), add 1 to last (missing gap)
+  columnsWidths.shift() // remove first
+  columnsWidths[columnsWidths.length - 1] = columnsWidths[columnsWidths.length - 1] + " "
 
   let overallTotal = 0
 
-  // iterate through each column
+  // iterate through each line (long string), operations line already removed
   const mathLines = data.map((line, i) => {
-    const lineLength = line.length
-    const spaceNumber = columnsWidths[i + 1].length
+    // placeholder for my new line, broken into array of strings
     const newLine = []
+
+    // length of my full line so I know when to end
+    const lineLength = line.length
+    
+    // length of the first value so I know where to chop, varies by column, skip first blank
+    let valueLength = columnsWidths[0].length
+    // running number for the column index to query the columnWidths with
+    let columnIndex = 0
+
+    // running start and end index for slice, endIndex is not included
     let startIndex = 0
-    let endIndex = spaceNumber
-    while (endIndex <= lineLength) {
+    let endIndex = valueLength
+
+    // go through the entire string, include full length because last is not included
+    while (endIndex <= line.length) {
+      // add my new line to the array
       newLine.push(line.slice(startIndex, endIndex))
+
+      // console.log({ line, lineLength: line.length, startIndex, endIndex, valueLength, columnIndex, columnLength: columnsWidths[columnIndex].length, number: line[startIndex], newLine})
+      // start where last left off and skip gap
       startIndex = endIndex + 1
-      endIndex = endIndex + spaceNumber + 1
+      columnIndex++
+      // console.log({columnIndex, columnLength: columnsWidths[columnIndex].length})
+      valueLength = columnsWidths[columnIndex]?.length
+      // adjust new end index based on new column width
+      endIndex = startIndex + valueLength
       if (endIndex === lineLength - 1) {
         endIndex++
       }
@@ -78,7 +99,7 @@ const second = (input: string) => {
     return newLine
   })
 
-  console.log({mathLines})
+  // console.log({mathLines})
 
   for (let i = 0; i < numberOfColumns; i++) {
 
@@ -86,17 +107,25 @@ const second = (input: string) => {
 
     const newValues: string[] = []
     // let runningTotal = mathLines[0][i]
-    // // skip first line
+    // build the new values to calculate
     for (let line = 0; line < mathLines.length; line++) {
+      // console.log({ line, column: i, lineLength: mathLines[line].length })
       const currentNumber = mathLines[line][i]
+      // console.log({currentNumber, previous: mathLines[line][i - 1]})
+      // if (currentNumber === undefined) {
+      //   continue
+      // }
       for (let internalColumn = 0; internalColumn < currentNumber.length; internalColumn++) {
         newValues[internalColumn] = `${newValues[internalColumn] ? newValues[internalColumn]: ""}${currentNumber[internalColumn]}`
       }
     }
 
-    console.log({ newValues })
+    // console.log({ newValues })
     let runningTotal = 0
     for (const string of newValues) {
+      if (!string) {
+        console.log("empty string")
+      }
       const currentNumber = Number(string)
       if (runningTotal === 0) {
         runningTotal = currentNumber
@@ -115,6 +144,6 @@ const second = (input: string) => {
 };
 
 // example answer = 3263827
-const expectedSecondSolution = 'solution 2';
+const expectedSecondSolution = 9194682052782;
 
 export { expectedFirstSolution, expectedSecondSolution, first, second };

@@ -28,5 +28,11 @@ const { first, second }: Puzzle = await import(
   `./days/${puzzleName}/Puzzle.ts`
 );
 
+console.time("processing 1")
 console.log(first(input));
+console.timeLog("processing 1")
+
+console.time("processing 2")
 console.log(second(input));
+console.timeLog("processing 2")
+

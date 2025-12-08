@@ -3,7 +3,7 @@ import readFile from './utils/readFile.ts';
 
 const args = process.argv.slice(2);
 const dayToSolve = args[0];
-const test = args[1]
+const test = args[1];
 
 if (!dayToSolve) {
   console.error('No day specified run with npm run dev {day}');
@@ -28,11 +28,10 @@ const { first, second }: Puzzle = await import(
   `./days/${puzzleName}/Puzzle.ts`
 );
 
-console.time("finished 1")
-console.log(first(input));
-console.timeLog("finished 1")
+console.time('finished 1');
+console.log(first(input, !!test));
+console.timeLog('finished 1');
 
-console.time("finished 2")
+console.time('finished 2');
 console.log(second(input));
-console.timeLog("finished 2")
-
+console.timeLog('finished 2');

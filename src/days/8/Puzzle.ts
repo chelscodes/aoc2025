@@ -3,6 +3,42 @@ import {
   inputToArrayLines,
 } from '../../utils/inputToArray.ts';
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+const first = (input: string, test = false) => {
+  const data = formatData(input);
+  // console.log(data);
+
+  const distances = getDistances(data);
+  const smallestNumbers = distances.slice(0, test ? 10 : 1000); // for test (0, 10) | for input (0, 1000)
+
+  const filteredCircuits = getMergedCircuits(smallestNumbers);
+
+  // ~~ multiple the largest 3 circuits
+  let total = 0;
+  for (let i = 0; i < 3; i++) {
+    if (i === 0) {
+      total = filteredCircuits[i].length;
+      continue;
+    }
+    total *= filteredCircuits[i].length;
+  }
+
+  return total;
+};
+
+// ~~example answer = 40
+// ~~6409 is too low (was unsorted)
+const expectedFirstSolution = 123930;
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+const second = (input: string) => {
+  // console.log(input);
+  return 'solution 2';
+};
+
+// example answer = 25272
+const expectedSecondSolution = 'solution 2';
+
 // ~~~~~ HELPERS ~~~~~~~~~~~
 const formatData = (input: string) => {
   const data = inputToArrayLines(input);
@@ -19,6 +55,23 @@ const straightLineDistance = (p: number[], q: number[]) => {
   return Math.sqrt(
     (p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2 + (p[2] - q[2]) ** 2
   );
+};
+
+const getDistances = (data: number[][]) => {
+  // ~~go through each point, find distance with points after,
+  const distances: { pointA: number; pointB: number; distance: number }[] = [];
+  // ~~go through each line
+  for (let i = 0; i < data.length; i++) {
+    // ~~go through each line after current)
+    for (let j = i + 1; j < data.length; j++) {
+      distances.push({
+        pointA: i,
+        pointB: j,
+        distance: straightLineDistance(data[i], data[j]),
+      });
+    }
+  }
+  return distances.sort((a, b) => a.distance - b.distance);
 };
 
 // ~~compares numbers in second to first array
@@ -44,7 +97,7 @@ const mergeCircuits = (circuits: number[][]) => {
       break;
     }
     // ~~go through each previous item to check for a match
-    for (let j = i - 1; j >= 0; j--) {
+    for (let j = 0; j < i; j++) {
       const matchFound = searchForMatch(circuits[i], circuits[j]);
       if (matchFound) {
         mergeCount++;
@@ -64,29 +117,10 @@ const mergeCircuits = (circuits: number[][]) => {
   return { mergedCircuits, mergeCount };
 };
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-const first = (input: string) => {
-  const data = formatData(input);
-  // console.log(data);
-
-  // ~~go through each point, find distance with points after,
-  const distances: { pointA: number; pointB: number; distance: number }[] = [];
-  // ~~go through each line
-  for (let i = 0; i < data.length; i++) {
-    // ~~go through each line after current)
-    for (let j = i + 1; j < data.length; j++) {
-      distances.push({
-        pointA: i,
-        pointB: j,
-        distance: straightLineDistance(data[i], data[j]),
-      });
-    }
-  }
-
-  distances.sort((a, b) => a.distance - b.distance);
-  const smallestNumbers = distances.slice(0, 1000); // for test (0, 10) | for input (0, 1000)
-
-  const circuits: number[][] = smallestNumbers.map((item) => {
+const getMergedCircuits = (
+  distances: { pointA: number; pointB: number; distance: number }[]
+) => {
+  const circuits: number[][] = distances.map((item) => {
     return [item.pointA, item.pointB];
   });
   let lastMergeCount: number | undefined;
@@ -100,38 +134,12 @@ const first = (input: string) => {
     }
   }
 
-  const filteredCircuits = updatedCircuits
+  return updatedCircuits
     .map((item) => {
       const s = new Set(item);
       return [...s];
     })
     .sort((a, b) => b.length - a.length);
-
-  let total = 0;
-  for (let i = 0; i < 3; i++) {
-    if (i === 0) {
-      total = filteredCircuits[i].length;
-      continue;
-    }
-    total *= filteredCircuits[i].length;
-  }
-
-  console.log({ circuits, filteredCircuits });
-
-  return total;
 };
-
-// ~~example answer = 40
-// ~~ 6409 is too low
-const expectedFirstSolution = 123930;
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-const second = (input: string) => {
-  // console.log(input);
-  return 'solution 2';
-};
-
-// example answer =
-const expectedSecondSolution = 'solution 2';
 
 export { expectedFirstSolution, expectedSecondSolution, first, second };

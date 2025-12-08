@@ -11,7 +11,9 @@ const first = (input: string, test = false) => {
   const distances = getDistances(data);
   const smallestNumbers = distances.slice(0, test ? 10 : 1000); // for test (0, 10) | for input (0, 1000)
 
-  const filteredCircuits = getMergedCircuits(smallestNumbers);
+  const circuits = distancesToCircuits(smallestNumbers);
+
+  const filteredCircuits = getMergedCircuits(circuits);
 
   // ~~ multiple the largest 3 circuits
   let total = 0;
@@ -22,6 +24,10 @@ const first = (input: string, test = false) => {
     }
     total *= filteredCircuits[i].length;
   }
+  console.log({
+    distancesLength: distances.length,
+    filteredLength: filteredCircuits[0].length,
+  });
 
   return total;
 };
@@ -31,13 +37,54 @@ const first = (input: string, test = false) => {
 const expectedFirstSolution = 123930;
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-const second = (input: string) => {
-  // console.log(input);
-  return 'solution 2';
+const second = (input: string, test = false) => {
+  const data = formatData(input);
+  const startLength = test ? 10 : 1000;
+  const distances = getDistances(data);
+
+  const smallestNumbers = distances.slice(0, startLength); // start with a piece
+
+  const circuits = distancesToCircuits(smallestNumbers);
+
+  let filteredCircuits = getMergedCircuits(circuits);
+
+  // console.log({ filteredCircuits, length: filteredCircuits[0].length });
+  let countOfConnections = startLength; // count we're starting with
+
+  while (
+    filteredCircuits.length > 2 ||
+    filteredCircuits[0].length < data.length
+  ) {
+    const newCircuitToAdd = distancesToCircuits([
+      distances[countOfConnections],
+    ]);
+    filteredCircuits = getMergedCircuits([
+      ...filteredCircuits,
+      ...newCircuitToAdd,
+    ]);
+
+    countOfConnections++;
+  }
+
+  const finalConnection = distances[countOfConnections - 1];
+  const pointA = data[finalConnection.pointA];
+  const pointB = data[finalConnection.pointB];
+
+  const finalAnswer = pointA[0] * pointB[0];
+
+  console.log('distance object', distances[countOfConnections], {
+    distancesLength: distances.length,
+    filteredLength: filteredCircuits[0].length,
+    countOfConnections,
+    finalConnection,
+    pointA,
+    pointB,
+  });
+  return finalAnswer;
 };
 
 // example answer = 25272
-const expectedSecondSolution = 'solution 2';
+const expectedSecondSolution = 27338688;
 
 // ~~~~~ HELPERS ~~~~~~~~~~~
 const formatData = (input: string) => {
@@ -89,6 +136,7 @@ const searchForMatch = (first: number[], second: number[]) => {
 const mergeCircuits = (circuits: number[][]) => {
   const mergedCircuits: number[][] = structuredClone(circuits);
   let mergeCount = 0;
+  const matchedIndexes = [];
 
   // ~~start at second item
   for (let i = 1; i < circuits.length; i++) {
@@ -101,6 +149,7 @@ const mergeCircuits = (circuits: number[][]) => {
       const matchFound = searchForMatch(circuits[i], circuits[j]);
       if (matchFound) {
         mergeCount++;
+        matchedIndexes[0] = [];
         const removedItem = mergedCircuits.splice(i, 1);
         mergedCircuits[j] = [...mergedCircuits[j], ...removedItem[0]];
         // console.log({
@@ -117,12 +166,15 @@ const mergeCircuits = (circuits: number[][]) => {
   return { mergedCircuits, mergeCount };
 };
 
-const getMergedCircuits = (
+const distancesToCircuits = (
   distances: { pointA: number; pointB: number; distance: number }[]
 ) => {
-  const circuits: number[][] = distances.map((item) => {
+  return distances.map((item) => {
     return [item.pointA, item.pointB];
   });
+};
+
+const getMergedCircuits = (circuits: number[][]) => {
   let lastMergeCount: number | undefined;
   let updatedCircuits = circuits;
   while (lastMergeCount !== 0) {

@@ -33,5 +33,5 @@ console.log(first(input, !!test));
 console.timeLog('finished 1');
 
 console.time('finished 2');
-console.log(second(input));
+console.log(second(input, !!test));
 console.timeLog('finished 2');

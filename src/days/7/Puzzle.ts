@@ -10,6 +10,7 @@ const first = (input: string) => {
   for (let i = 2; i < data.length; i += 2) {
     const currentLine = data[i]
     const splitters: number[] = []
+
     // look for index of splitters
     // const index = currentLine.indexOf("^")
     let found = true
@@ -53,43 +54,33 @@ const second = (input: string) => {
   const data = inputToArrayLines(input)
 
   const startBeam = data[0].indexOf("S") 
-  let currentBeams: number[] = [startBeam]
-  let countOfPaths = 1
+  let currentBeams: number[] = new Array(data[0].length)
+  currentBeams.fill(0)
+  currentBeams[startBeam] = 1
+  
+  let nextBeamLine: number[] = structuredClone(currentBeams)
 
   for (let i = 2; i < data.length; i += 2) {
-    // console.log(i)
-    let newBeams: number[] = []
-
-    console.log("Line: ", i + 1, "of ", data.length)
-    
     for (let j = 0; j < currentBeams.length; j++){
-      // console.log("J: ", j, "of ", currentBeams.length, "on line ", i, "of ", data.length)
-      const beamLocation = currentBeams[j]
-      const matchCheck = data[i][beamLocation] === "^"
+      const amountOfBeamsHere = currentBeams[j]
+      const matchCheck = data[i][j] === "^" && amountOfBeamsHere > 0
 
       if (matchCheck) {
-        countOfPaths++
-
-        newBeams.push(beamLocation - 1)
-        newBeams.push(beamLocation + 1)
-      } else {
-        newBeams.push(beamLocation)
-      }
-      // console.log({i, beamLocation, matchCheck})
+        nextBeamLine[j - 1] += amountOfBeamsHere
+        nextBeamLine[j] -= amountOfBeamsHere
+        nextBeamLine[j + 1] += amountOfBeamsHere
+      } 
     }
-
-    // newBeams.sort((a, b) => a - b)
-
-    currentBeams = newBeams
+    currentBeams = nextBeamLine
   }
 
-  // console.log({countOfPaths, currentBeams, length: currentBeams.length})
-
+  const countOfPaths = currentBeams.reduce((previousValue, currentValue) => previousValue + currentValue)
+  
   console.log("DONE!!", {countOfPaths, currentBeamLength: currentBeams.length})
   return countOfPaths;
 };
 
 // example answer = 40
-const expectedSecondSolution = 'solution 2';
+const expectedSecondSolution = 36706966158365;
 
 export { expectedFirstSolution, expectedSecondSolution, first, second };

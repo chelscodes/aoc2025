@@ -15,27 +15,21 @@ const second = (input: string) => {
   const data = inputToArrayLineThenComma(input);
   const areas = getAreas(data);
 
-  console.log('~~ getting outline...');
   const outline = createOutline(data);
-  console.log('~~ getting filled tiles...');
-  const allRedGreenTiles = fillInOutline(outline);
+  const allRedGreenTiles = getFilledInRanges(outline);
 
   console.log('~~ starting validation...');
+
   // check that the area is valid, if not, check next one
   let validArea: { tiles: number[]; area: number } | undefined; // can update to just return valid area
   for (let i = 0; i < areas.length; i++) {
     console.log('checking area number', i + 1, 'of', areas.length);
     const currentTiles = areas[i].tiles;
-    // console.log({
-    //   currentTiles,
-    //   tile1: data[currentTiles[0]],
-    //   tile2: data[currentTiles[1]],
-    // });
 
-    if (checkForLine(currentTiles)) {
-      validArea = areas[i];
-      break;
-    }
+    // if (checkForLine(currentTiles)) {
+    //   validArea = areas[i];
+    //   break;
+    // }
 
     const isValid = checkForValidArea(
       data[currentTiles[0]],
@@ -54,6 +48,7 @@ const second = (input: string) => {
 };
 
 // example answer = 24
+// area number 121084 of 122760 -- answer 1017520 is too low
 const expectedSecondSolution = 'solution 2';
 
 export { expectedFirstSolution, expectedSecondSolution, first, second };
@@ -77,17 +72,15 @@ const getAreas = (data: number[][]) => {
   return areas.sort((a, b) => b.area - a.area);
 };
 
-const checkForLine = (tiles: number[]) => {
-  return tiles[1] === tiles[0] + 1 || tiles[0] === tiles[1] - 1;
-};
+// const checkForLine = (tiles: number[]) => {
+//   return tiles[1] === tiles[0] + 1 || tiles[0] === tiles[1] - 1;
+// };
 
 const checkForValidArea = (
   tile1: number[],
   tile2: number[],
-  validTiles: number[][]
-  // allTiles: number[][]
+  validTiles: Map<number, number[][]>
 ) => {
-  // console.log({ tile1, tile2 });
   const widthStart = tile1[0] < tile2[0] ? tile1[0] : tile2[0];
   const widthEnd = tile1[0] > tile2[0] ? tile1[0] : tile2[0];
   const heightStart = tile1[1] < tile2[1] ? tile1[1] : tile2[1];
@@ -97,11 +90,18 @@ const checkForValidArea = (
 
   // from top to bottom
   for (let i = heightStart; i <= heightEnd; i++) {
-    for (let j = widthStart; j <= widthEnd; j++) {
-      const found = validTiles.find((item) => item[0] === j && item[1] === i);
-      if (!found) {
-        return false;
-      }
+    // for (let j = widthStart; j <= widthEnd; j++) {
+    const rangesForLine = validTiles.get(i);
+    if (!rangesForLine) return false;
+    // let found = false
+
+    // find valid range
+    const found = rangesForLine.filter((range) => {
+      return range[0] <= widthStart && range[1] >= widthEnd;
+    });
+    if (!found.length) {
+      // console.log({ i, rangesForLine, widthStart, widthEnd });
+      return false;
     }
   }
 
@@ -137,90 +137,73 @@ const createOutline = (tileLocations: number[][]) => {
   return outlineTiles;
 };
 
-const fillInOutline = (outline: number[][]) => {
-  // go top to bottom, (Y lowest to highest)
-  // left to right fill X values (X lowest to highest)
+const getFilledInRanges = (outline: number[][]) => {
   const sortedOutline = outline.sort((a, b) => a[1] - b[1] || a[0] - b[0]);
   console.log('~~ sorting done');
 
-  // console.log('~~ creating the lines...');
-  // const lineByLine: number[][][] = [];
-  // while (sortedOutline.length > 0) {
-  //   console.log({ sortedOutlineLength: sortedOutline.length });
-  //   const start = sortedOutline[0];
-  //   const last = sortedOutline.findLastIndex((item) => item[1] === start[1]);
-  //   const line = sortedOutline.splice(0, last + 1);
-  //   lineByLine.push(line);
-  // }
-  // console.log('~~ line by line created');
-
   console.log('~~ going through each line section...');
-  const filledOutline: number[][] = [];
-  let start = 1; // start of line index
+  const filledRangesMap: Map<number, number[][]> = new Map(); // line is key, value is array of ranges
+
+  let start = 0; // start of line index
   let end = sortedOutline.findLastIndex(
     (item) => item[1] === sortedOutline[start][1]
   ); // end of line index
   while (end < sortedOutline.length) {
+    console.log('SECTION', start, end, 'of', sortedOutline.length - 1);
+    // go through each vertical line space, inclusive of end, skip first value
     for (let i = start + 1; i <= end; i++) {
-      // go through whole array
-      console.log('~~ looking at line...', {
-        start,
-        end,
-        length: sortedOutline.length,
-      });
-      // const currentLine = lineByLine[i];
-      // let gapFound = false;
+      const lineIndex = sortedOutline[start][1]; // y value, same across this section
 
-      if (sortedOutline[start - 1][0] === sortedOutline[i][0] - 1) {
-        // next to each other
-        filledOutline.push(sortedOutline[i - 1]);
-        // continue; // x values are the same
-      } else {
-        // there's a gap, so go through entire gap length
-        for (
-          let gap = sortedOutline[start][0]; // start of gap, include first (outline)
-          gap < sortedOutline[end][0];
-          gap++
-        ) {
-          filledOutline.push([gap, sortedOutline[start][1]]);
+      // look at previous value and current value - 1, if same, they're consecutive
+      // ALWAYS looking at [0] because [1] will always be the same for these sections
+      if (sortedOutline[i - 1][0] === sortedOutline[i][0] - 1) {
+        const lastAddedRange = filledRangesMap.get(lineIndex)?.pop();
+
+        if (lastAddedRange && lastAddedRange[1] === sortedOutline[i][0] - 1) {
+          filledRangesMap.set(lineIndex, [
+            ...(filledRangesMap.get(lineIndex) ?? []),
+            [lastAddedRange[0], sortedOutline[i][0]],
+          ]);
+        } else {
+          filledRangesMap.set(lineIndex, [
+            ...(filledRangesMap.get(lineIndex) ?? []),
+            [sortedOutline[i - 1][0], sortedOutline[i][0]],
+          ]);
         }
+      } else {
+        //  GOING TO NEED TO ADD LOGIC TO HANDLE CHECK THAT IT'S A TRUE GAP
+        const lastAddedRange = filledRangesMap.get(lineIndex)?.pop();
+        // there's a gap, so add gap range
+        if (lastAddedRange) {
+          filledRangesMap.set(lineIndex, [
+            ...(filledRangesMap.get(lineIndex) ?? []),
+            [lastAddedRange[0], sortedOutline[i][0]],
+          ]);
+        } else {
+          filledRangesMap.set(lineIndex, [
+            ...(filledRangesMap.get(lineIndex) ?? []),
+            [sortedOutline[i - 1][0], sortedOutline[i][0]],
+          ]);
+        }
+        i += 2;
       }
-      if (end === sortedOutline.length - 1) {
+      if (end === sortedOutline.length) {
         end++;
         break;
       }
-      start = end + 1;
+    }
+    start = end + 1;
+    if (sortedOutline[start]) {
       end = sortedOutline.findLastIndex(
         (item) => item[1] === sortedOutline[start][1]
-      ); // skip next tile location because would be a gap
+      );
+    } else {
+      end = sortedOutline.length + 1;
     }
   }
-
-  return filledOutline;
+  // console.log({ filledRangesMap });
+  return filledRangesMap;
 };
-//   console.log('~~ going through each line...', { length: lineByLine.length });
-//   for (let i = 0; i < lineByLine.length; i++) {
-//     console.log('~~ looking at line...', i);
-//     const currentLine = lineByLine[i];
-//     // let gapFound = false;
-//     // if all consecutive, move on
-//     for (let tileIndex = 1; tileIndex < currentLine.length; tileIndex++) {
-//       if (currentLine[tileIndex - 1][0] === currentLine[tileIndex][0] - 1) {
-//         continue;
-//       }
-//       for (
-//         let gap = currentLine[tileIndex - 1][0] + 1;
-//         gap < currentLine[tileIndex][0];
-//         gap++
-//       ) {
-//         currentLine.push([gap, currentLine[tileIndex][1]]);
-//       }
-//       currentLine.sort((a, b) => a[0] - b[0]);
-//       tileIndex += 2; // skip next tile location because would be a gap
-//     }
-//   }
-//   return lineByLine.flat();
-// };
 
 // X values match [X, Y], so X is same for all
 const fillYValues = (pointA: number[], pointB: number[]) => {

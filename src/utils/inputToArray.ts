@@ -4,13 +4,22 @@ export const inputToArrayLines = (input: string) => {
 
 // when there's a blank line that separates type of data
 export const inputToArrayLineSections = (input: string) => {
-  const firstSplit = input.split(/\r?\n\n/)
+  const firstSplit = input.split(/\r?\n\n/);
   const multipleArrays = firstSplit.map((string) => {
-    return inputToArrayLines(string)
-  })
-  return multipleArrays
-}
+    return inputToArrayLines(string);
+  });
+  return multipleArrays;
+};
 
 export const inputToArrayCommas = (input: string) => {
-  return input.split(",");
+  return input.split(',');
+};
+
+export const inputToArrayLineThenComma = (input: string) => {
+  const data = inputToArrayLines(input);
+  const formattedData = data.map((line) => {
+    const array = inputToArrayCommas(line);
+    return array.map((value) => Number(value));
+  });
+  return formattedData;
 };

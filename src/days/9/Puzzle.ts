@@ -86,21 +86,16 @@ const checkForValidArea = (
   const heightStart = tile1[1] < tile2[1] ? tile1[1] : tile2[1];
   const heightEnd = tile1[1] > tile2[1] ? tile1[1] : tile2[1];
 
-  // go through from width, height start to width, height end and check that the point is in the red/green tiles array
-
   // from top to bottom
   for (let i = heightStart; i <= heightEnd; i++) {
-    // for (let j = widthStart; j <= widthEnd; j++) {
     const rangesForLine = validTiles.get(i);
     if (!rangesForLine) return false;
-    // let found = false
 
     // find valid range
     const found = rangesForLine.filter((range) => {
       return range[0] <= widthStart && range[1] >= widthEnd;
     });
     if (!found.length) {
-      // console.log({ i, rangesForLine, widthStart, widthEnd });
       return false;
     }
   }
@@ -148,48 +143,103 @@ const getFilledInRanges = (outline: number[][]) => {
   let end = sortedOutline.findLastIndex(
     (item) => item[1] === sortedOutline[start][1]
   ); // end of line index
+
   while (end < sortedOutline.length) {
     console.log('SECTION', start, end, 'of', sortedOutline.length - 1);
+
     // go through each vertical line space, inclusive of end, skip first value
     for (let i = start + 1; i <= end; i++) {
       const lineIndex = sortedOutline[start][1]; // y value, same across this section
-
-      // look at previous value and current value - 1, if same, they're consecutive
+      const isConsecutive = sortedOutline[i - 1][0] === sortedOutline[i][0] - 1;
+      const isGap = !isConsecutive;
       // ALWAYS looking at [0] because [1] will always be the same for these sections
-      if (sortedOutline[i - 1][0] === sortedOutline[i][0] - 1) {
-        const lastAddedRange = filledRangesMap.get(lineIndex)?.pop();
+      // if it's the first line or last line, only add consecutive spaces as ranges
+      const ranges = filledRangesMap.get(lineIndex);
 
-        if (lastAddedRange && lastAddedRange[1] === sortedOutline[i][0] - 1) {
+      if (isConsecutive) {
+        if (ranges === undefined) {
+          // first range added for line
           filledRangesMap.set(lineIndex, [
-            ...(filledRangesMap.get(lineIndex) ?? []),
-            [lastAddedRange[0], sortedOutline[i][0]],
-          ]);
-        } else {
-          filledRangesMap.set(lineIndex, [
-            ...(filledRangesMap.get(lineIndex) ?? []),
             [sortedOutline[i - 1][0], sortedOutline[i][0]],
           ]);
-        }
-      } else {
-        //  GOING TO NEED TO ADD LOGIC TO HANDLE CHECK THAT IT'S A TRUE GAP
-        const lastAddedRange = filledRangesMap.get(lineIndex)?.pop();
-        // there's a gap, so add gap range
-        if (lastAddedRange) {
-          filledRangesMap.set(lineIndex, [
-            ...(filledRangesMap.get(lineIndex) ?? []),
-            [lastAddedRange[0], sortedOutline[i][0]],
-          ]);
         } else {
-          filledRangesMap.set(lineIndex, [
-            ...(filledRangesMap.get(lineIndex) ?? []),
-            [sortedOutline[i - 1][0], sortedOutline[i][0]],
-          ]);
+          const lastRange = ranges[ranges.length - 1];
+          if (lastRange[1] === sortedOutline[i][0] - 1) {
+            // added to last range
+            filledRangesMap.get(lineIndex)?.pop(); // remove so we can replace
+
+            filledRangesMap.set(lineIndex, [
+              ...(filledRangesMap.get(lineIndex) ?? []),
+              [lastRange[0], sortedOutline[i][0]],
+            ]);
+          } else {
+            // add a new range
+            filledRangesMap.set(lineIndex, [
+              ...(filledRangesMap.get(lineIndex) ?? []),
+              [sortedOutline[i - 1][0], sortedOutline[i][0]],
+            ]);
+          }
         }
-        i += 2;
-      }
-      if (end === sortedOutline.length) {
-        end++;
-        break;
+        // skip over first and last lines, will always be outline only, no fill
+      } else if (isGap && start !== 0 && end !== sortedOutline.length - 1) {
+        // gapCount++
+
+        // if previous line above gap is filled in, fill gap
+        const previousLine = filledRangesMap.get(lineIndex - 1);
+        // console.log('previous line', previousLine);
+        if (
+          previousLine?.filter((range) => {
+            return (
+              range[0] <= sortedOutline[i][0] - 1 &&
+              range[1] >= sortedOutline[i][0] - 1
+            );
+          }) &&
+          previousLine?.filter((range) => {
+            return (
+              range[0] <= sortedOutline[i - 1][0] + 1 &&
+              range[1] >= sortedOutline[i - 1][0] + 1
+            );
+          })
+        ) {
+          if (ranges === undefined) {
+            // first range added for line
+            filledRangesMap.set(lineIndex, [
+              [sortedOutline[i - 1][0], sortedOutline[i][0]],
+            ]);
+          } else {
+            const lastRange = ranges[ranges.length - 1];
+            // there's a gap, so add gap range
+
+            if (lastRange && lastRange[1] === sortedOutline[i - 1][0]) {
+              // console.log('ADDING TO PREVIOUS:', {
+              //   lastRange,
+              //   filledRangesMap,
+              //   lineIndex,
+              //   newRange: [lastRange[0], sortedOutline[i][0]],
+              // });
+              // add to last range if previous connects
+              filledRangesMap.get(lineIndex)?.pop(); // remove so we can replace
+              filledRangesMap.set(lineIndex, [
+                ...(filledRangesMap.get(lineIndex) ?? []),
+                [lastRange[0], sortedOutline[i][0]],
+              ]);
+            } else {
+              // add a new range
+              filledRangesMap.set(lineIndex, [
+                ...(filledRangesMap.get(lineIndex) ?? []),
+                [sortedOutline[i - 1][0], sortedOutline[i][0]],
+              ]);
+
+              if (sortedOutline[i][0] !== sortedOutline[i + 1][0] - 1) {
+                i += 2; // if it's a gap, we want to skip next outline point, as long as it not connected to another outline
+              }
+            }
+            if (end === sortedOutline.length) {
+              end++;
+              break;
+            }
+          }
+        }
       }
     }
     start = end + 1;
